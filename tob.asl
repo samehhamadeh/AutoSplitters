@@ -1,5 +1,5 @@
 // Tales of Berseria Auto Splitter by LurkingSR
-// Version 1.0 (January 1st, 2021)
+// Version 1.1 (January 30th, 2021)
 // If you find any issues with the splitter or would want any changes or additions to it
 // you can mention it in the Issues section in the github repository, or contact me on 
 // Discord at Lurking#1001 or through the Tales of Speedruns server.
@@ -19,7 +19,7 @@ startup
 	Tuple.Create("seres", 1572),
 	Tuple.Create("drake", 4240),
 	Tuple.Create("dyle", 9520),
-	Tuple.Create("teresa", 10000000), //Placeholder
+	Tuple.Create("teresa", 1657), //Placeholder
 	Tuple.Create("eizen", 8034),
 	Tuple.Create("guardian", 10576),
 	Tuple.Create("eleanor1", 9250),
@@ -53,7 +53,18 @@ startup
 	Tuple.Create("artorius2", 77873),
 	Tuple.Create("artorius3", 151621),
 
+	Tuple.Create("bludewolf", 1415),
+	Tuple.Create("hellawesguards", 1907),
+	Tuple.Create("lizards", 2107),
+	Tuple.Create("bullandrat", 6153),
 	Tuple.Create("snakeladies", 2918),
+	Tuple.Create("vesterguards", 888),
+	Tuple.Create("bushape", 9732),
+	Tuple.Create("octopot", 6937),
+	Tuple.Create("zombopot", 5651),
+	Tuple.Create("faldiestrash", 12489),
+	Tuple.Create("aballtrash", 12351),
+	Tuple.Create("angel", 21705),
 	};
 
 	vars.splitsHit = new HashSet<string>();
@@ -99,7 +110,18 @@ startup
 
 	// TODO: ADD ALL SCRUB FIGHTS
 	settings.Add("scrubfights", true, "Scrub Fights");
+	settings.Add("bludewolf", false, "Blude Wolf", "scrubfights");
+	settings.Add("hellawesguards", false, "Hellawes Guards", "scrubfights");
+	settings.Add("lizards", false, "Vortigern Lizards", "scrubfights");
+	settings.Add("bullandrat", false, "Vortigern Guard and Pets", "scrubfights");
 	settings.Add("snakeladies", true, "Snake Ladies", "scrubfights");
+	settings.Add("vesterguards", false, "Vester Guards", "scrubfights");
+	settings.Add("bushape", false, "Bush Ape", "scrubfights");
+	settings.Add("octopot", false, "Octopot", "scrubfights");
+	settings.Add("zombopot", false, "Zombopot", "scrubfights");
+	settings.Add("faldiestrash", false, "Faldies Guards", "scrubfights");
+	settings.Add("aballtrash", false, "Aball Daemons", "scrubfights");
+	settings.Add("angel", false, "Loegres Angel", "scrubfights");
 
 	vars.gameConnected = false;
 	vars.timerJustStarted = false;
@@ -107,6 +129,9 @@ startup
 	vars.currentlyInFight = false;
 	vars.currentEnemyHP = 0;
 	vars.oldEnemyHP = 0;
+	vars.oldOldEnemyHP = 0;
+	vars.eleanor2Count = 0;
+	vars.hellkiteCount = 0;
 	vars.timer_OnStart = (EventHandler)((s, e) =>
 	{
 		vars.timerJustStarted = true;
@@ -123,6 +148,7 @@ shutdown
 	vars.gameConnected = false;
 	vars.timerStartedSinceBoot = false;
 	vars.currentlyInFight = false;
+	vars.currentFight = "none";
 }
 
 
@@ -138,17 +164,18 @@ exit
 {
 	vars.gameConnected = false;
 	vars.currentlyInFight = false;
-	print("EXITING THE GAME! currentlyInFight is: " + vars.currentlyInFight);
+	print("EXITING THE GAME!");
 
 }
 
 
 update
 {
+	vars.oldOldOldEnemyHP = vars.oldOldEnemyHP;
 	vars.oldOldEnemyHP = vars.oldEnemyHP;
 	vars.oldEnemyHP = vars.currentEnemyHP;
 	vars.currentEnemyHP = vars.enemyHPDeepPointer.Deref<int>(game, -1);
-	// print("Current enemy HP is: " + vars.currentEnemyHP + " and old enemy HP is: "+ vars.oldEnemyHP);
+	print("Current enemy HP is: " + vars.currentEnemyHP + " and old enemy HP is: "+ vars.oldEnemyHP);
 	if (!vars.gameConnected) {
 		return false;
 	}
@@ -193,10 +220,18 @@ split
 	}
 
 	// We just finished a fight
-	if (vars.oldOldEnemyHP != -1 && vars.oldEnemyHP == -1 && vars.currentEnemyHP == -1) {
+	if (vars.oldOldOldEnemyHP != -1 && vars.oldOldEnemyHP == -1 && vars.oldEnemyHP == -1 && vars.currentEnemyHP == -1) {
 		if (vars.gameConnected && vars.currentlyInFight && settings[vars.currentFight] && !vars.splitsHit.Contains(vars.currentFight)) {
 			print("I just split for " + vars.currentFight);
 			print("There current HP is " + vars.currentEnemyHP + " and their old HP is " + vars.oldOldEnemyHP);
+			if (vars.currentFight == "eleanor2" && vars.eleanor2Count == 0) {
+				vars.eleanor2Count++;
+				return false;
+			}
+			if (vars.currentFight == "hellkite" && vars.hellkiteCount == 0) {
+				vars.hellkiteCount++;
+				return false;
+			}
 			vars.splitsHit.Add(vars.currentFight);
 			vars.currentFight = "none";
 			vars.currentlyInFight = false;
@@ -209,6 +244,9 @@ split
 start
 {
 	if (old.currentGald == 0 && current.currentGald == 200) {
+		vars.currentFight = "none";
+		vars.hellkiteCount = 0;
+		vars.eleanor2Count = 0;
 		return true;
 	}
 }
